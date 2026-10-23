@@ -7,7 +7,7 @@
 
 Türkiye'deki bireysel krediler için **KKDF ve BSMV dahil** taksit ve ödeme planı, vadeli mevduat getirisi (stopaj dahil) ve **reel faiz** hesaplayıcı.
 
-🔗 **Canlı demo:** https://mehmetvrl32-cpu.github.io/kredi-faiz-hesaplayici/
+🔗 **Canlı demo:** https://mehmet-vural.github.io/kredi-faiz-hesaplayici/
 
 ![Ekran görüntüsü](docs/ekran.png)
 
@@ -57,7 +57,7 @@ $$1 + r_{reel} = \frac{1 + i}{1 + \pi}$$
 
 ## Kullanım
 
-**Tarayıcıda:** [Canlı demoyu](https://mehmetvrl32-cpu.github.io/kredi-faiz-hesaplayici/) açın ya da `index.html` dosyasını indirip çift tıklayın. Kurulum gerekmez.
+**Tarayıcıda:** [Canlı demoyu](https://mehmet-vural.github.io/kredi-faiz-hesaplayici/) açın ya da `index.html` dosyasını indirip çift tıklayın. Kurulum gerekmez.
 
 **Python'da:**
 
@@ -89,7 +89,7 @@ pytest
 
 - KKDF, BSMV ve stopaj oranları mevzuatla değişebilir. Hesaplayıcıda hepsi düzenlenebilir; varsayılanlar yalnızca başlangıç değeridir.
 - Bankalar dosya masrafı, sigorta gibi ek kalemler de alabilir; bunlar hesaba dahil değildir.
-- Enflasyonun 20 yıllık seyri için: [enflasyon-doviz-analizi](https://github.com/mehmetvrl32-cpu/enflasyon-doviz-analizi)
+- Enflasyonun 20 yıllık seyri için: [enflasyon-doviz-analizi](https://github.com/mehmet-vural/enflasyon-doviz-analizi)
 
 > ⚠️ Eğitim amaçlıdır, finansal tavsiye değildir.
 
