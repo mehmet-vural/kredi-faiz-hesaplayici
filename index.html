@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kredi ve Faiz Hesaplayıcı</title>
+<meta name="description" content="KKDF ve BSMV dahil kredi taksiti, ödeme planı, mevduat getirisi ve reel faiz hesaplayıcı.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --ink: #14213d; --muted: #5b6475; --line: #e2e5eb;
+    --accent: #1f5aa6; --accent-soft: #e6eef9; --gold: #b7791f; --red: #c8102e; --green: #1b7f4b;
+    --anapara: #1f5aa6; --faiz: #e3a21a; --vergi: #c8102e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1321; --panel: #151d2e; --ink: #e8ecf3; --muted: #9aa4b5; --line: #26314a;
+      --accent: #6aa3ef; --accent-soft: #1b2a45; --gold: #e3b45a; --red: #f06a7d; --green: #4cc38a;
+      --anapara: #6aa3ef; --faiz: #e3b45a; --vergi: #f06a7d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 Inter, system-ui, sans-serif; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 16px 48px; }
+  header h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -0.02em; }
+  header p { margin: 0; color: var(--muted); }
+  .tabs { display: flex; gap: 6px; margin: 24px 0 16px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 9px 16px;
+         border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer; }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .card h2 { margin: 0 0 14px; font-size: 16px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 12px 0 4px; }
+  input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px;
+                  background: var(--bg); color: var(--ink); font: 500 15px 'JetBrains Mono', monospace; }
+  select { font-family: Inter, sans-serif; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .stat .k { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .stat .v { font: 600 20px 'JetBrains Mono', monospace; margin-top: 4px; white-space: nowrap; }
+  .stat.main { background: var(--accent-soft); border-color: transparent; }
+  .stat.main .v { color: var(--accent); font-size: 24px; }
+  .legend { display: flex; gap: 16px; font-size: 13px; color: var(--muted); margin-bottom: 8px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  svg { width: 100%; height: auto; display: block; }
+  .tablo-wrap { max-height: 360px; overflow: auto; margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font: 13px 'JetBrains Mono', monospace; }
+  th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--panel); font-family: Inter, sans-serif; color: var(--muted); }
+  details summary { cursor: pointer; font-weight: 600; margin-top: 16px; }
+  .bar-split { display: flex; height: 14px; border-radius: 7px; overflow: hidden; margin: 8px 0 4px; }
+  .pos { color: var(--green); } .neg { color: var(--red); }
+  .formula { font: 13px 'JetBrains Mono', monospace; background: var(--bg); border-radius: 8px; padding: 10px 12px; margin-top: 12px; color: var(--muted); overflow-x: auto; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
+  footer a { color: var(--accent); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Kredi ve Faiz Hesaplayıcı</h1>
+    <p>KKDF ve BSMV dahil kredi taksiti, ödeme planı, mevduat getirisi ve reel faiz.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="kredi">Kredi</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="mevduat">Mevduat</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="reel">Reel getiri</button>
+  </div>
+
+  <!-- KREDİ -->
+  <section id="kredi" class="grid">
+    <div class="card">
+      <h2>Kredi bilgileri</h2>
+      <label for="k-tur">Kredi türü</label>
+      <select id="k-tur">
+        <option value="ihtiyac">İhtiyaç kredisi</option>
+        <option value="tasit">Taşıt kredisi</option>
+        <option value="konut">Konut kredisi</option>
+      </select>
+      <label for="k-tutar">Kredi tutarı (TL)</label>
+      <input id="k-tutar" type="number" value="250000" min="1000" step="1000">
+      <div class="row2">
+        <div><label for="k-faiz">Aylık faiz (%)</label><input id="k-faiz" type="number" value="3.49" min="0" step="0.01"></div>
+        <div><label for="k-vade">Vade (ay)</label><input id="k-vade" type="number" value="36" min="1" max="360" step="1"></div>
+      </div>
+      <div class="row2">
+        <div><label for="k-kkdf">KKDF (%)</label><input id="k-kkdf" type="number" value="15" min="0" step="1"></div>
+        <div><label for="k-bsmv">BSMV (%)</label><input id="k-bsmv" type="number" value="15" min="0" step="1"></div>
+      </div>
+      <p class="hint">Vergi oranları kredi türüne göre varsayılan olarak gelir. Mevzuat değişebilir, güncel oranı bankanızdan teyit edin.</p>
+      <div class="formula">r<sub>brüt</sub> = r × (1 + KKDF + BSMV)<br>taksit = P · r<sub>brüt</sub> / (1 − (1 + r<sub>brüt</sub>)<sup>−n</sup>)</div>
+    </div>
+    <div>
+      <div class="stats">
+        <div class="stat main"><div class="k">Aylık taksit</div><div class="v" id="k-taksit">–</div></div>
+        <div class="stat"><div class="k">Toplam geri ödeme</div><div class="v" id="k-toplam">–</div></div>
+        <div class="stat"><div class="k">Toplam faiz</div><div class="v" id="k-tfaiz">–</div></div>
+        <div class="stat"><div class="k">Toplam vergi</div><div class="v" id="k-tvergi">–</div></div>
+        <div class="stat"><div class="k">Yıllık bileşik maliyet</div><div class="v" id="k-yillik">–</div></div>
+      </div>
+      <div class="card">
+        <h2>Paranız nereye gidiyor?</h2>
+        <div class="bar-split" id="k-split"></div>
+        <div class="legend">
+          <span><i style="background:var(--anapara)"></i>Anapara</span>
+          <span><i style="background:var(--faiz)"></i>Faiz</span>
+          <span><i style="background:var(--vergi)"></i>KKDF + BSMV</span>
+        </div>
+        <h2 style="margin-top:18px">Taksitlerin ay ay dağılımı</h2>
+        <svg id="k-grafik" viewBox="0 0 640 220" role="img" aria-label="Aylara göre anapara, faiz ve vergi payı"></svg>
+        <details>
+          <summary>Ödeme planını göster</summary>
+          <div class="tablo-wrap"><table>
+            <thead><tr><th>Ay</th><th>Taksit</th><th>Anapara</th><th>Faiz</th><th>KKDF</th><th>BSMV</th><th>Kalan</th></tr></thead>
+            <tbody id="k-tablo"></tbody>
+          </table></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEVDUAT -->
+  <section id="mevduat" class="grid" hidden>
+    <div class="card">
+      <h2>Mevduat bilgileri</h2>
+      <label for="m-tutar">Anapara (TL)</label>
+      <input id="m-tutar" type="number" value="100000" min="0" step="1000">
+      <div class="row2">
+        <div><label for="m-faiz">Yıllık faiz (%)</label><input id="m-faiz" type="number" value="42" min="0" step="0.1"></div>
+        <div><label for="m-gun">Vade (gün)</label><input id="m-gun" type="number" value="32" min="1" step="1"></div>
+      </div>
+      <div class="row2">
+        <div><label for="m-stopaj">Stopaj (%)</label><input id="m-stopaj" type="number" value="17.5" min="0" step="0.5"></div>
+        <div><label for="m-donem">Kaç vade yenilensin?</label><input id="m-donem" type="number" value="12" min="1" max="120" step="1"></div>
+      </div>
+      <p class="hint">Stopaj oranı vadeye ve döneme göre değişir; güncel oranı kontrol edin.</p>
+      <div class="formula">net faiz = P × i × gün / 365 × (1 − stopaj)</div>
+    </div>
+    <div>
+      <div class="stats">
+        <div class="stat main"><div class="k">Vade sonu net faiz</div><div class="v" id="m-net">–</div></div>
+        <div class="stat"><div class="k">Yenilemeyle son bakiye</div><div class="v" id="m-son">–</div></div>
+        <div class="stat"><div class="k">Yıllık efektif net getiri</div><div class="v" id="m-efektif">–</div></div>
+      </div>
+      <div class="card">
+        <h2>Faiz üstüne faiz: bakiyenin büyümesi</h2>
+        <svg id="m-grafik" viewBox="0 0 640 220" role="img" aria-label="Vade yenilendikçe bakiye"></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- REEL -->
+  <section id="reel" class="grid" hidden>
+    <div class="card">
+      <h2>Getiri ve enflasyon</h2>
+      <label for="r-nominal">Nominal yıllık getiri (%)</label>
+      <input id="r-nominal" type="number" value="45" step="0.1">
+      <label for="r-enf">Yıllık enflasyon (%)</label>
+      <input id="r-enf" type="number" value="33" step="0.1">
+      <label for="r-tutar">Yatırılan tutar (TL)</label>
+      <input id="r-tutar" type="number" value="100000" step="1000">
+      <div class="formula">Fisher: 1 + r<sub>reel</sub> = (1 + i) / (1 + π)</div>
+      <p class="hint">Enflasyonun 20 yıllık seyri için: <a href="https://github.com/mehmetvrl32-cpu/enflasyon-doviz-analizi">enflasyon-doviz-analizi</a></p>
+    </div>
+    <div>
+      <div class="stats">
+        <div class="stat main"><div class="k">Reel getiri</div><div class="v" id="r-reel">–</div></div>
+        <div class="stat"><div class="k">Yıl sonu nominal bakiye</div><div class="v" id="r-nom-bakiye">–</div></div>
+        <div class="stat"><div class="k">Bugünün parasıyla değeri</div><div class="v" id="r-reel-bakiye">–</div></div>
+      </div>
+      <div class="card">
+        <h2>Basit çıkarma neden yanıltır?</h2>
+        <p id="r-aciklama" style="margin:0;color:var(--muted)"></p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Eğitim amaçlıdır, finansal tavsiye değildir. Hesaplamaların Python karşılığı ve testleri:
+    <a href="https://github.com/mehmetvrl32-cpu/kredi-faiz-hesaplayici">GitHub</a> ·
+    Mehmet Vural · <a href="https://www.linkedin.com/in/mehmetvrl/">LinkedIn</a>
+  </footer>
+</div>
+
+<script>
+const VERGILER = { ihtiyac: [15, 15], tasit: [15, 15], konut: [0, 0] };
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id).value) || 0;
+const tl = v => v.toLocaleString("tr-TR", { maximumFractionDigits: 0 }) + " TL";
+const tl2 = v => v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const yuzde = v => "%" + (v * 100).toLocaleString("tr-TR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+function odemePlani(P, r, n, kkdf, bsmv) {
+  const rb = r * (1 + kkdf + bsmv);
+  const taksit = rb === 0 ? P / n : P * rb / (1 - Math.pow(1 + rb, -n));
+  let kalan = P; const plan = [];
+  for (let ay = 1; ay <= n; ay++) {
+    const faiz = kalan * r;
+    let anapara = taksit - faiz * (1 + kkdf + bsmv);
+    if (ay === n) anapara = kalan;
+    kalan -= anapara;
+    plan.push({ ay, taksit, anapara, faiz, kkdf: faiz * kkdf, bsmv: faiz * bsmv, kalan: Math.max(kalan, 0) });
+  }
+  return { taksit, plan, yillik: Math.pow(1 + rb, 12) - 1 };
+}
+
+function cubukGrafik(svg, seriler, renkler, etiketler) {
+  const W = 640, H = 220, sol = 52, alt = 24, ust = 8;
+  const n = seriler[0].length;
+  const toplam = i => seriler.reduce((s, x) => s + x[i], 0);
+  const max = Math.max(...Array.from({ length: n }, (_, i) => toplam(i))) || 1;
+  const gw = (W - sol - 8) / n, bw = Math.max(gw * 0.78, 0.6);
+  let s = "";
+  for (let t = 0; t <= 4; t++) {
+    const y = ust + (H - alt - ust) * (1 - t / 4);
+    s += `<line x1="${sol}" x2="${W}" y1="${y}" y2="${y}" stroke="${css("--line")}"/>`;
+    s += `<text x="${sol - 6}" y="${y + 4}" text-anchor="end" font-size="11" fill="${css("--muted")}">${Math.round(max * t / 4).toLocaleString("tr-TR")}</text>`;
+  }
+  for (let i = 0; i < n; i++) {
+    let y = H - alt;
+    seriler.forEach((seri, k) => {
+      const h = (seri[i] / max) * (H - alt - ust);
+      y -= h;
+      s += `<rect x="${sol + i * gw}" y="${y}" width="${bw}" height="${h}" fill="${renkler[k]}"/>`;
+    });
+  }
+  const adim = Math.ceil(n / 8);
+  for (let i = 0; i < n; i += adim)
+    s += `<text x="${sol + i * gw + bw / 2}" y="${H - 6}" text-anchor="middle" font-size="11" fill="${css("--muted")}">${etiketler[i]}</text>`;
+  svg.innerHTML = s;
+}
+
+function kredi() {
+  const P = num("k-tutar"), r = num("k-faiz") / 100, n = Math.max(1, Math.round(num("k-vade")));
+  const kkdf = num("k-kkdf") / 100, bsmv = num("k-bsmv") / 100;
+  if (P <= 0) return;
+  const { taksit, plan, yillik } = odemePlani(P, r, n, kkdf, bsmv);
+  const tFaiz = plan.reduce((s, t) => s + t.faiz, 0);
+  const tVergi = plan.reduce((s, t) => s + t.kkdf + t.bsmv, 0);
+  $("k-taksit").textContent = tl(taksit);
+  $("k-toplam").textContent = tl(taksit * n);
+  $("k-tfaiz").textContent = tl(tFaiz);
+  $("k-tvergi").textContent = tl(tVergi);
+  $("k-yillik").textContent = yuzde(yillik);
+  const top = P + tFaiz + tVergi;
+  $("k-split").innerHTML = [[P, "--anapara"], [tFaiz, "--faiz"], [tVergi, "--vergi"]]
+    .map(([v, c]) => `<div title="${tl(v)}" style="width:${100 * v / top}%;background:var(${c})"></div>`).join("");
+  cubukGrafik($("k-grafik"),
+    [plan.map(t => t.anapara), plan.map(t => t.faiz), plan.map(t => t.kkdf + t.bsmv)],
+    [css("--anapara"), css("--faiz"), css("--vergi")], plan.map(t => t.ay + ". ay"));
+  $("k-tablo").innerHTML = plan.map(t =>
+    `<tr><td>${t.ay}</td><td>${tl2(t.taksit)}</td><td>${tl2(t.anapara)}</td><td>${tl2(t.faiz)}</td><td>${tl2(t.kkdf)}</td><td>${tl2(t.bsmv)}</td><td>${tl2(t.kalan)}</td></tr>`).join("");
+}
+
+function mevduat() {
+  const P = num("m-tutar"), i = num("m-faiz") / 100, gun = Math.max(1, num("m-gun"));
+  const stopaj = num("m-stopaj") / 100, donem = Math.max(1, Math.round(num("m-donem")));
+  const net = b => b * i * gun / 365 * (1 - stopaj);
+  const bakiyeler = [P];
+  for (let k = 0; k < donem; k++) bakiyeler.push(bakiyeler[k] + net(bakiyeler[k]));
+  $("m-net").textContent = tl(net(P));
+  $("m-son").textContent = tl(bakiyeler[donem]);
+  $("m-efektif").textContent = yuzde(Math.pow(1 + i * gun / 365 * (1 - stopaj), 365 / gun) - 1);
+  const anapara = bakiyeler.slice(1).map(() => P);
+  const faiz = bakiyeler.slice(1).map(b => b - P);
+  cubukGrafik($("m-grafik"), [anapara, faiz], [css("--anapara"), css("--green")],
+    bakiyeler.slice(1).map((_, k) => (k + 1) + ". vade"));
+}
+
+function reel() {
+  const i = num("r-nominal") / 100, pi = num("r-enf") / 100, P = num("r-tutar");
+  const r = (1 + i) / (1 + pi) - 1;
+  const el = $("r-reel");
+  el.textContent = yuzde(r);
+  el.className = "v " + (r >= 0 ? "pos" : "neg");
+  $("r-nom-bakiye").textContent = tl(P * (1 + i));
+  $("r-reel-bakiye").textContent = tl(P * (1 + r));
+  const basit = i - pi;
+  $("r-aciklama").innerHTML =
+    `“Getiri eksi enflasyon” kısayolu ${yuzde(basit)} der, ama doğru cevap <b>${yuzde(r)}</b>. ` +
+    `Fark, enflasyonun yalnızca anaparayı değil kazandığınız faizi de eritmesinden gelir. ` +
+    `Oranlar büyüdükçe kısayolun hatası büyür: burada fark ${Math.abs((basit - r) * 100).toLocaleString("tr-TR", { maximumFractionDigits: 1 })} puan.`;
+}
+
+$("k-tur").addEventListener("change", e => {
+  const [kkdf, bsmv] = VERGILER[e.target.value];
+  $("k-kkdf").value = kkdf; $("k-bsmv").value = bsmv; kredi();
+});
+document.querySelectorAll("#kredi input").forEach(el => el.addEventListener("input", kredi));
+document.querySelectorAll("#mevduat input").forEach(el => el.addEventListener("input", mevduat));
+document.querySelectorAll("#reel input").forEach(el => el.addEventListener("input", reel));
+document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b === btn));
+  document.querySelectorAll("section").forEach(s => s.hidden = s.id !== btn.dataset.tab);
+}));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { kredi(); mevduat(); });
+kredi(); mevduat(); reel();
+</script>
+</body>
+</html>
